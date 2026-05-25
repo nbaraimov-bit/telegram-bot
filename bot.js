@@ -311,7 +311,7 @@ bot.onText(
 
 bot.sendMessage(
   5793538486,
-  "Test xabar 🚀"
+  "bot yangilandi"
 )
 
 import express from "express"
