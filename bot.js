@@ -327,3 +327,11 @@ const PORT = process.env.PORT || 3000
 server.listen(PORT, () => {
   console.log("Server started")
 })
+
+process.on("uncaughtException", (err) => {
+  console.log("UNCAUGHT ERROR:", err)
+})
+
+process.on("unhandledRejection", (err) => {
+  console.log("UNHANDLED REJECTION:", err)
+})
