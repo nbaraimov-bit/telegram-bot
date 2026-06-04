@@ -28,7 +28,7 @@ const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
 
 const token = "7843106853:AAGDXuNZPv0jY6LRyWtoTJl0ZXJ6gWfcgVc"
-const ADMIN_ID = 5793538486
+//const ADMIN_ID = 5793538486
 
 const bot = new TelegramBot(
   token,
@@ -166,36 +166,52 @@ bot.on(
         "Admin tasdiqlashini kuting ⏳"
       )
 
-      await bot.sendMessage(
+      const workersSnapshot = await getDocs(
+        collection(db, "workers")
+      )
 
-        ADMIN_ID,
+      const admins = workersSnapshot.docs.filter((d) => {
 
-        `${msg.from.first_name} ish boshlamoqchi 👷`,
+        const worker = d.data()
 
-        {
-          reply_markup: {
+        return (
+          worker.telegramId && (
+            worker.roles?.includes("admin") ||
+            worker.roles?.includes("ega")
+          )
+        )
 
-            inline_keyboard: [[
+      })
 
-              {
-                text: "Tasdiqlash ✅",
-                callback_data:
-                  `approve_${msg.chat.id}`
-              },
+      for (const admin of admins) {
 
-              {
-                text: "Rad ❌",
-                callback_data:
-                  `reject_${msg.chat.id}`
-              }
+        await bot.sendMessage(
 
-            ]]
+          admin.data().telegramId,
 
+          `${msg.from.first_name} ish boshlamoqchi 👷`,
+
+          {
+            reply_markup: {
+              inline_keyboard: [[
+
+                {
+                  text: "Tasdiqlash ✅",
+                  callback_data: `approve_${msg.chat.id}`
+                }, 
+
+                {
+                  text: "Rad ❌",
+                  callback_data: `reject_${msg.chat.id}`
+                }
+
+              ]]
+            }
           }
 
-        }
+        )
 
-      )
+      }
 
     }
 
@@ -226,6 +242,16 @@ bot.on(
     return bot.sendMessage(
       query.message.chat.id,
       "Worker topilmadi ❌"
+    )
+
+  }
+
+  if (workerDoc.data().working) {
+
+    return bot.answerCallbackQuery(
+      query.id,{
+        text: "Allaqachon tasdiqlangan"
+      }
     )
 
   }
