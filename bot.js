@@ -347,7 +347,9 @@ setInterval(async () => {
 
       return (
         worker.telegramId &&
-        worker.roles?.includes("driver")
+        worker.roles?.includes("driver") ||
+        worker.roles?.includes("admin") ||
+        worker.roles?.includes("ega")
       )
 
     })
