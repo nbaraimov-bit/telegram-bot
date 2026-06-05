@@ -362,9 +362,12 @@ setInterval(async () => {
         driver.data().telegramId,
 
         `🚚 Yangi buyurtma
-        📞 ${order.phone}
-        📍 ${order.address}
-        📦 Tarif: ${order.tarif}`
+
+📞 ${order.phone}
+    
+📍 ${order.address}
+    
+📦 Tarif: ${order.tarif}`
 
       )
 
@@ -374,6 +377,102 @@ setInterval(async () => {
       doc(db, "orders", orderDoc.id),
       {
         driverNotified: true
+      }
+    )
+
+  }
+
+}, 5000)
+
+setInterval(async () => {
+
+  const ordersSnapshot = await getDocs(
+
+    query(
+      collection(db, "orders"),
+      where("status", "==", "Olindi"),
+      where("washerNotified", "==", false)
+    )
+
+  )
+
+  for (const orderDoc of ordersSnapshot.docs) {
+
+    const order = orderDoc.data()
+
+    const workersSnapshot = await getDocs(
+      collection(db, "workers")
+    )
+
+    const washers = workersSnapshot.docs.filter((d) => {
+
+      const worker = d.data()
+
+      return (
+        worker.telegramId &&
+        worker.roles?.includes("washer")
+      )
+
+    })
+
+    for (const washer of washers) {
+
+      try {
+
+        await bot.sendMessage(
+
+          washer.data().telegramId,
+
+          `🧺 Yangi buyurtma keldi
+
+📞 ${order.phone}
+📍 ${order.address}
+
+let details = ""
+
+if (order.carpetCount) {
+  details += 🧵 Gilam: ${order.carpetCount}\n
+}
+
+if (order.kvm) {
+  details += 📐 Kv.m: ${order.kvm}\n
+}
+
+if (order.blanket) {
+  details += 🛏 Adyol: ${order.blanket}\n
+}
+
+if (order.yakandoz) {
+  details += 🪑 Yakandoz: ${order.yakandoz}\n
+}
+
+if (order.curtainCount) {
+  details += 🪟 Parda: ${order.curtainCount}\n
+}
+
+if (order.curtainMeter) {
+  details += 📏 Metri: ${order.curtainMeter}\n
+}
+
+📦 Tarif: ${order.tarif}`
+
+        )
+
+      } catch (err) {
+
+        console.log(
+          "Washer xabari xatosi:",
+          err.message
+        )
+
+      }
+
+    }
+
+    await updateDoc(
+      doc(db, "orders", orderDoc.id),
+      {
+        washerNotified: true
       }
     )
 
