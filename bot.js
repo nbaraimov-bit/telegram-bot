@@ -11,7 +11,9 @@ import {
   collection,
   getDocs,
   updateDoc,
-  doc
+  doc,
+  query,
+  where,
 }
 from "firebase/firestore"
 
@@ -322,6 +324,63 @@ bot.on(
 
   }
 )
+
+setInterval(async () => {
+
+  const ordersSnapshot = await getDocs(
+
+    query(
+      collection(db, "orders"),
+      where("status", "==", "Yangi"),
+      where("driverNotified", "==", false)
+    )
+
+  )
+
+  for (const orderDoc of ordersSnapshot.docs) {
+
+    const order = orderDoc.data()
+
+    const workersSnapshot = await getDocs(
+      collection(db, "workers")
+    )
+
+    const drivers = workersSnapshot.docs.filter((d) => {
+
+      const worker = d.data()
+
+      return (
+        worker.telegramId &&
+        worker.roles?.includes("driver")
+      )
+
+    })
+
+    for (const driver of drivers) {
+
+      await bot.sendMessage(
+
+        driver.data().telegramId,
+
+        `🚚 Yangi buyurtma
+        📞 ${order.phone}
+        📍 ${order.address}
+        📦 Tarif: ${order.tarif}`
+
+      )
+
+    }
+
+    await updateDoc(
+      doc(db, "orders", orderDoc.id),
+      {
+        driverNotified: true
+      }
+    )
+
+  }
+
+}, 5000)
 
 bot.onText(
   /\/id/,
