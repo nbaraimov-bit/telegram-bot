@@ -168,10 +168,6 @@ bot.on(
         "Admin tasdiqlashini kuting ⏳"
       )
 
-      const workersSnapshot = await getDocs(
-        collection(db, "workers")
-      )
-
       const admins = workersSnapshot.docs.filter((d) => {
 
         const worker = d.data()
@@ -229,58 +225,58 @@ bot.on(
 
     if (data.startsWith("approve_")) {
 
-  const workerId = data.split("_")[1]
+      const workerId = data.split("_")[1]
 
-  const workersSnapshot = await getDocs(
-    collection(db, "workers")
-  )
+      const workersSnapshot = await getDocs(
+        collection(db, "workers")
+      )
 
-  const workerDoc = workersSnapshot.docs.find(
-    (d) => String(d.data().telegramId) === String(workerId)
-  )
+      const workerDoc = workersSnapshot.docs.find(
+        (d) => String(d.data().telegramId) === String(workerId)
+      )
 
-  if (!workerDoc) {
+      if (!workerDoc) {
 
-    return bot.sendMessage(
-      query.message.chat.id,
-      "Worker topilmadi ❌"
-    )
+        return bot.sendMessage(
+          query.message.chat.id,
+          "Worker topilmadi ❌"
+        )
 
-  }
-
-  if (workerDoc.data().working) {
-
-    return bot.answerCallbackQuery(
-      query.id,{
-        text: "Allaqachon tasdiqlangan"
       }
-    )
 
-  }
+      if (workerDoc.data().working) {
 
-  await updateDoc(
-    doc(db, "workers", workerDoc.id),
-    {
-      working: true,
-      status: "faol",
-      startedAt: new Date()
+        return bot.answerCallbackQuery(
+          query.id,{
+            text: "Allaqachon tasdiqlangan"
+          }
+        )
+
+      }
+
+      await updateDoc(
+        doc(db, "workers", workerDoc.id),
+        {
+          working: true,
+          status: "faol",
+          startedAt: new Date()
+        }
+      )
+
+      await bot.sendMessage(
+        workerId,
+        "Tasdiqlandi ✅\n\nIshni boshlashingiz mumkin"
+      )
+
+      await bot.editMessageText(
+        "Tasdiqlandi ✅",
+        {
+          chat_id: query.message.chat.id,
+          message_id: query.message.message_id
+        }
+      )
+
     }
-  )
-
-  await bot.sendMessage(
-    workerId,
-    "Tasdiqlandi ✅\n\nIshni boshlashingiz mumkin"
-  )
-
-  await bot.editMessageText(
-    "Tasdiqlandi ✅",
-    {
-      chat_id: query.message.chat.id,
-      message_id: query.message.message_id
-    }
-  )
-
-}
 
     if (
       data.startsWith(
