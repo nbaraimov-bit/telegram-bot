@@ -419,43 +419,24 @@ setInterval(async () => {
 
       try {
 
+        let details = ""
+
+        if (order.carpetCount) {details += `🧵 Gilam: ${order.carpetCount}\n`}
+        if (order.kvm) {details += `📐 Kv.m: ${order.kvm}\n`}
+        if (order.blanket) {details += `🛏 Adyol: ${order.blanket}\n`}
+        if (order.yakandoz) {details += `🪑 Yakandoz: ${order.yakandoz}\n`}
+        if (order.curtainCount) {details += `🪟 Parda: ${order.curtainCount}\n`}
+        if (order.curtainMeter) {details += `📏 Metri: ${order.curtainMeter}\n`}
+        
         await bot.sendMessage(
-
           washer.data().telegramId,
-
-          `🧺 Yangi buyurtma keldi
+`🧺 Yangi buyurtma keldi
 
 📞 ${order.phone}
 📍 ${order.address}
 
-let details = ""
-
-if (order.carpetCount) {
-  details += 🧵 Gilam: ${order.carpetCount}\n
-}
-
-if (order.kvm) {
-  details += 📐 Kv.m: ${order.kvm}\n
-}
-
-if (order.blanket) {
-  details += 🛏 Adyol: ${order.blanket}\n
-}
-
-if (order.yakandoz) {
-  details += 🪑 Yakandoz: ${order.yakandoz}\n
-}
-
-if (order.curtainCount) {
-  details += 🪟 Parda: ${order.curtainCount}\n
-}
-
-if (order.curtainMeter) {
-  details += 📏 Metri: ${order.curtainMeter}\n
-}
-
+${details}
 📦 Tarif: ${order.tarif}`
-
         )
 
       } catch (err) {
