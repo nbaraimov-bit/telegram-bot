@@ -128,7 +128,7 @@ bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
 
-        if (text === "📢 Yangilanish yuborish") {
+  if (text === "📢 Yangilanish yuborish") {
     adminState[chatId] = {
       step: "version"
     };
@@ -200,13 +200,15 @@ ${adminState[chatId].message}`,
       try {
         await bot.sendMessage(
           worker.telegramId,
-          `📢 Sakura Cleaning CRM yangilandi!
+          `📢  Sayt yangilandi!
 
-🆕 Versiya: ${state.version}
+🆕 Versiya: Sakura ${state.version}
+
+Yangilanish haqida:
 
 ${state.message}
 
-🔄 O'zgarishlarni ko'rish uchun Mini Appni qayta oching.`
+🔄 Yangilanishni ko'rish uchun saytni qayta yuklang.`
         );
 
         count++;
@@ -381,6 +383,12 @@ bot.onText(
     )
 
   }
+)
+
+
+bot.sendMessage(
+  5793538486,
+  "bot yangilandi"
 )
 
 
