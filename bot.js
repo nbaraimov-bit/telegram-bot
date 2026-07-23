@@ -128,11 +128,7 @@ bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
 
-  if (adminState[chatId]?.step === "version") {
-    adminState[chatId].version = text;
-    adminState[chatId].step = "message";
-
-      if (text === "📢 Yangilanish yuborish") {
+        if (text === "📢 Yangilanish yuborish") {
     adminState[chatId] = {
       step: "version"
     };
@@ -142,6 +138,10 @@ bot.on("message", async (msg) => {
       "🆕 Versiyani kiriting.\n\nMasalan: v1.2.0"
     );
   }
+
+  if (adminState[chatId]?.step === "version") {
+    adminState[chatId].version = text;
+    adminState[chatId].step = "message";
 
     return bot.sendMessage(
       chatId,
@@ -175,17 +175,17 @@ ${adminState[chatId].message}`,
     delete adminState[chatId];
 
     return bot.sendMessage(chatId, "❌ Bekor qilindi.", {
-        reply_markup: {
-            remove_keyboard: true,
-        },
+      reply_markup: {
+        remove_keyboard: true,
+      },
     });
-}
+  }
 
-if (text === "✅ Yuborish") {
+  if (text === "✅ Yuborish") {
     const state = adminState[chatId];
 
     if (!state || state.step !== "confirm") {
-        return;
+      return;
     }
 
     const workersSnapshot = await getDocs(collection(db, "workers"));
@@ -193,40 +193,40 @@ if (text === "✅ Yuborish") {
     let count = 0;
 
     for (const workerDoc of workersSnapshot.docs) {
-        const worker = workerDoc.data();
+      const worker = workerDoc.data();
 
-        if (!worker.telegramId) continue;
+      if (!worker.telegramId) continue;
 
-        try {
-            await bot.sendMessage(
-                worker.telegramId,
-                `📢 Sakura Cleaning CRM yangilandi!
+      try {
+        await bot.sendMessage(
+          worker.telegramId,
+          `📢 Sakura Cleaning CRM yangilandi!
 
 🆕 Versiya: ${state.version}
 
 ${state.message}
 
 🔄 O'zgarishlarni ko'rish uchun Mini Appni qayta oching.`
-            );
+        );
 
-            count++;
-        } catch (err) {
-            console.log(worker.name, err.message);
-        }
+        count++;
+      } catch (err) {
+        console.log(worker.name, err.message);
+      }
     }
 
     delete adminState[chatId];
 
     return bot.sendMessage(
-        chatId,
-        `✅ ${count} ta workerga yuborildi.`,
-        {
-            reply_markup: {
-                remove_keyboard: true,
-            },
-        }
+      chatId,
+      `✅ ${count} ta workerga yuborildi.`,
+      {
+        reply_markup: {
+          remove_keyboard: true,
+        },
+      }
     );
-}
+  }
 
 });
 
