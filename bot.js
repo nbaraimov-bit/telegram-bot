@@ -30,7 +30,7 @@ const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
 
 const token = "7843106853:AAGDXuNZPv0jY6LRyWtoTJl0ZXJ6gWfcgVc"
-//const ADMIN_ID = 5793538486
+
 
 const bot = new TelegramBot(
   token,
@@ -40,6 +40,7 @@ const bot = new TelegramBot(
 )
 
 console.log("Bot ishga tushdi")
+
 
 bot.onText(
   /\/start/,
@@ -91,235 +92,144 @@ bot.onText(
 
       "Gilam CRM",
 
-      {
-
-        reply_markup: {
-
-          keyboard: [
-
-            [
-              {
-                text:
-                  "Ishni boshlash"
-              }
-            ],
-
-          ],
-
-          resize_keyboard: true
-
-        }
-
-      }
-
     )
 
   }
 )
 
-bot.on(
-  "message",
-  async (msg) => {
+const adminState = {};
 
-    if (
-      msg.text ===
-      "Ishni boshlash"
-    ) {
 
-      // workerni topish
-      const workersSnapshot = await getDocs(
-        collection(db, "workers")
-      )
+bot.onText(/\/admin/, async (msg) => {
+  const chatId = msg.chat.id;
 
-      const workerDoc = workersSnapshot.docs.find((d) => {
-        const data = d.data()
+  const workerSnap = await getDocs(collection(db, "workers"));
 
-        return (
-          data.telegramId &&
-          Number(data.telegramId) === Number(msg.chat.id)
-        )
+  const worker = workerSnap.docs
+  .map(d => d.data())
+  .find(w => w.telegramId == chatId);
 
-      })
+  if (!worker || worker.role !== "ega") {
+    return bot.sendMessage(chatId, "⛔️ Sizda ruxsat yo'q.");
+  }
 
-      // worker topilmasa
-      if (!workerDoc) {
+  bot.sendMessage(chatId, "Admin panel", {
+    reply_markup: {
+      keyboard: [
+        ["📢 Yangilanish yuborish"]
+      ],
+      resize_keyboard: true
+    }
+  });
+});
 
-        return bot.sendMessage(
-          msg.chat.id,
-          "Siz ro‘yxatdan o‘tmagansiz"
-        )
 
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
+  const text = msg.text;
+
+  if (adminState[chatId]?.step === "version") {
+    adminState[chatId].version = text;
+    adminState[chatId].step = "message";
+
+      if (text === "📢 Yangilanish yuborish") {
+    adminState[chatId] = {
+      step: "version"
+    };
+
+    return bot.sendMessage(
+      chatId,
+      "🆕 Versiyani kiriting.\n\nMasalan: v1.2.0"
+    );
+  }
+
+    return bot.sendMessage(
+      chatId,
+        "📝 Endi yangilanish matnini yuboring."
+    );
+  }
+
+  if (adminState[chatId]?.step === "message") {
+    adminState[chatId].message = text;
+    adminState[chatId].step = "confirm";
+
+    return bot.sendMessage(
+      chatId,
+      `📢 Tasdiqlang
+
+🆕 Versiya: ${adminState[chatId].version}
+
+${adminState[chatId].message}`,
+      {
+        reply_markup: {
+          keyboard: [
+            ["✅ Yuborish", "❌ Bekor qilish"]
+          ],
+          resize_keyboard: true
+        }
       }
+    );
+  }
 
-      const worker = workerDoc.data()
+  if (text === "❌ Bekor qilish") {
+    delete adminState[chatId];
 
-      // allaqachon ishlayotgan bo‘lsa
-      if (worker.working) {
+    return bot.sendMessage(chatId, "❌ Bekor qilindi.", {
+        reply_markup: {
+            remove_keyboard: true,
+        },
+    });
+}
 
-        return bot.sendMessage(
-          msg.chat.id,
-          "Siz allaqachon ish boshlagansiz ✅"
-        )
+if (text === "✅ Yuborish") {
+    const state = adminState[chatId];
 
-      }
+    if (!state || state.step !== "confirm") {
+        return;
+    }
 
-      await bot.sendMessage(
-        msg.chat.id,
-        "Admin tasdiqlashini kuting ⏳"
-      )
+    const workersSnapshot = await getDocs(collection(db, "workers"));
 
-      const admins = workersSnapshot.docs.filter((d) => {
+    let count = 0;
 
-        const worker = d.data()
+    for (const workerDoc of workersSnapshot.docs) {
+        const worker = workerDoc.data();
 
-        return (
-          worker.telegramId && (
-            worker.role === "admin" ||
-            worker.role === "ega"
-          )
-        )
+        if (!worker.telegramId) continue;
 
-      })
+        try {
+            await bot.sendMessage(
+                worker.telegramId,
+                `📢 Sakura Cleaning CRM yangilandi!
 
-      for (const admin of admins) {
+🆕 Versiya: ${state.version}
 
-        await bot.sendMessage(
+${state.message}
 
-          admin.data().telegramId,
+🔄 O'zgarishlarni ko'rish uchun Mini Appni qayta oching.`
+            );
 
-          `${msg.from.first_name} ish boshlamoqchi 👷`,
+            count++;
+        } catch (err) {
+            console.log(worker.name, err.message);
+        }
+    }
 
-          {
+    delete adminState[chatId];
+
+    return bot.sendMessage(
+        chatId,
+        `✅ ${count} ta workerga yuborildi.`,
+        {
             reply_markup: {
-              inline_keyboard: [[
-
-                {
-                  text: "Tasdiqlash ✅",
-                  callback_data: `approve_${msg.chat.id}`
-                }, 
-
-                {
-                  text: "Rad ❌",
-                  callback_data: `reject_${msg.chat.id}`
-                }
-
-              ]]
-            }
-          }
-
-        )
-
-      }
-
-    }
-
-  }
-)
-
-bot.on(
-  "callback_query",
-  async (query) => {
-
-    const data =
-      query.data
-
-    if (data.startsWith("approve_")) {
-
-      const workerId = data.split("_")[1]
-
-      const workersSnapshot = await getDocs(
-        collection(db, "workers")
-      )
-
-      const workerDoc = workersSnapshot.docs.find(
-        (d) => String(d.data().telegramId) === String(workerId)
-      )
-
-      if (!workerDoc) {
-
-        return bot.sendMessage(
-          query.message.chat.id,
-          "Worker topilmadi ❌"
-        )
-
-      }
-
-      if (workerDoc.data().working) {
-
-        return bot.answerCallbackQuery(
-          query.id,{
-            text: "Allaqachon tasdiqlangan"
-          }
-        )
-
-      }
-
-      await updateDoc(
-        doc(db, "workers", workerDoc.id),
-        {
-          working: true,
-          status: "faol",
-          startedAt: new Date()
+                remove_keyboard: true,
+            },
         }
-      )
+    );
+}
 
-      await bot.sendMessage(
-        workerId,
-        "Tasdiqlandi ✅\n\nIshni boshlashingiz mumkin"
-      )
+});
 
-      await bot.editMessageText(
-        "Tasdiqlandi ✅",
-        {
-          chat_id: query.message.chat.id,
-          message_id: query.message.message_id
-        }
-      )
-
-    }
-
-    if (
-      data.startsWith(
-        "reject_"
-      )
-    ) {
-
-      const workerId = data.split("_")[1]
-
-      await bot.sendMessage(
-        workerId,
-        "So‘rovingiz rad etildi ❌"
-      )
-
-      const workersSnapshot = await getDocs(collection(db, "workers"))
-      const workerDoc = workersSnapshot.docs.find((d) => {
-
-        const data = d.data()
-
-        return (
-          data.telegramId &&
-          Number(data.telegramId) === Number(workerId)
-        )
-
-      })
-
-      if (workerDoc) {
-
-        await updateDoc(
-          doc(
-            db,
-            "workers",
-            workerDoc.id
-          ),
-          {working: false}
-        )
-
-      }
-
-    }
-
-  }
-)
 
 setInterval(async () => {
 
@@ -473,10 +383,6 @@ bot.onText(
   }
 )
 
-bot.sendMessage(
-  5793538486,
-  "bot yangilandi"
-)
 
 import express from "express"
 
