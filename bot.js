@@ -73,8 +73,8 @@ bot.onText(
 
     // admin yoki ega bo‘lsa
     if (
-      worker.roles?.includes("admin") ||
-      worker.roles?.includes("ega")
+      worker.role === "admin" ||
+      worker.role ==="ega"
     ) {
 
       return bot.sendMessage(
@@ -174,8 +174,8 @@ bot.on(
 
         return (
           worker.telegramId && (
-            worker.roles?.includes("admin") ||
-            worker.roles?.includes("ega")
+            worker.role === "admin" ||
+            worker.role === "ega"
           )
         )
 
@@ -347,9 +347,9 @@ setInterval(async () => {
 
       return (
         worker.telegramId &&
-        (worker.roles?.includes("driver") ||
-          worker.roles?.includes("admin") ||
-          worker.roles?.includes("ega")
+        (worker.role === "driver" ||
+          worker.role === "admin" ||
+          worker.role === "ega"
         )
       )
 
@@ -410,7 +410,7 @@ setInterval(async () => {
 
       return (
         worker.telegramId &&
-        worker.roles?.includes("washer")
+        worker.role === "washer"
       )
 
     })
