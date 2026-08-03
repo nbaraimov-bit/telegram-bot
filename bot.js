@@ -259,7 +259,9 @@ setInterval(async () => {
 
       return (
         worker.telegramId &&
-        (worker.role === "worker")
+        (worker.role === "worker" ||
+          worker.role === "ega"
+        )
       )
 
     })
