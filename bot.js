@@ -259,10 +259,7 @@ setInterval(async () => {
 
       return (
         worker.telegramId &&
-        (worker.role === "driver" ||
-          worker.role === "admin" ||
-          worker.role === "ega"
-        )
+        (worker.role === "worker")
       )
 
     })
@@ -279,7 +276,7 @@ setInterval(async () => {
     
 📍 ${order.address}
     
-📦 Tarif: ${order.tarif}`
+ID: ${order.id}`
 
       )
 
@@ -296,82 +293,6 @@ setInterval(async () => {
 
 }, 5000)
 
-setInterval(async () => {
-
-  const ordersSnapshot = await getDocs(
-
-    query(
-      collection(db, "orders"),
-      where("status", "==", "Olindi"),
-      where("washerNotified", "==", false)
-    )
-
-  )
-
-  for (const orderDoc of ordersSnapshot.docs) {
-
-    const order = orderDoc.data()
-
-    const workersSnapshot = await getDocs(
-      collection(db, "workers")
-    )
-
-    const washers = workersSnapshot.docs.filter((d) => {
-
-      const worker = d.data()
-
-      return (
-        worker.telegramId &&
-        worker.role === "washer"
-      )
-
-    })
-
-    for (const washer of washers) {
-
-      try {
-
-        let details = ""
-
-        if (order.carpetCount) {details += `🧵 Gilam: ${order.carpetCount}\n`}
-        if (order.kvm) {details += `📐 Kv.m: ${order.kvm}\n`}
-        if (order.blanket) {details += `🛏 Adyol: ${order.blanket}\n`}
-        if (order.yakandoz) {details += `🪑 Yakandoz: ${order.yakandoz}\n`}
-        if (order.curtainCount) {details += `🪟 Parda: ${order.curtainCount}\n`}
-        if (order.curtainMeter) {details += `📏 Metri: ${order.curtainMeter}\n`}
-        
-        await bot.sendMessage(
-          washer.data().telegramId,
-`🧺 Yangi buyurtma keldi
-
-📞 ${order.phone}
-📍 ${order.address}
-
-${details}
-📦 Tarif: ${order.tarif}`
-        )
-
-      } catch (err) {
-
-        console.log(
-          "Washer xabari xatosi:",
-          err.message
-        )
-
-      }
-
-    }
-
-    await updateDoc(
-      doc(db, "orders", orderDoc.id),
-      {
-        washerNotified: true
-      }
-    )
-
-  }
-
-}, 5000)
 
 bot.onText(
   /\/id/,
